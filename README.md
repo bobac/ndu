@@ -19,6 +19,7 @@ ndu [switches] [directory]
 - `-d count` - Limits the number of directories for recursive analysis to "count" largest ones
 - `-v` - Shows currently processed directory
 - `-j file.json` - Exports results to JSON file (sizes in bytes)
+- `-html file.html` - Exports results to HTML file with interactive pie chart visualization
 - `-help` - Shows help message
 
 ## Examples
@@ -34,6 +35,12 @@ ndu -h -n 3 -r 2 -d 1 /
 
 # Export directory analysis to JSON file
 ndu -j results.json /
+
+# Export directory analysis to HTML file with interactive visualization
+ndu -html results.html /
+
+# Combine HTML export with other options
+ndu -h -n 3 -r 2 -html results.html /
 
 # Combine JSON export with other options
 ndu -h -n 3 -r 2 -j results.json /

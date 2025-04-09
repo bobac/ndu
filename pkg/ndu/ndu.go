@@ -1,6 +1,7 @@
 package ndu
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -24,6 +25,7 @@ type Config struct {
 	RecursiveDepth int
 	Verbose        bool
 	JSONOutput     string
+	HTMLOutput     string
 }
 
 type JSONDir struct {
@@ -202,4 +204,224 @@ func ExportToJSON(dirs []DirSize, config Config, prefix string) (JSONDir, error)
 	}
 
 	return root, nil
+}
+
+func ExportToHTML(jsonDir JSONDir) string {
+	// Převedeme data na JSON
+	jsonData, err := json.Marshal(jsonDir)
+	if err != nil {
+		return fmt.Sprintf("Error generating JSON: %v", err)
+	}
+
+	html := `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Disk Usage Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .up-btn {
+            padding: 8px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .up-btn:hover {
+            background-color: #1976D2;
+        }
+        .up-btn:disabled {
+            background-color: #BDBDBD;
+            cursor: not-allowed;
+        }
+        .path {
+            flex-grow: 1;
+            font-family: monospace;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .size {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .copy-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #45a049;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 800px;
+            max-height: 600px;
+            margin: 0 auto;
+        }
+        canvas {
+            max-height: 500px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="up-btn" onclick="goUp()" id="upButton">↑</button>
+        <div class="path" id="currentPath"></div>
+        <div class="size" id="currentSize"></div>
+        <button class="copy-btn" onclick="copyPath()">Copy Path</button>
+    </div>
+    <div class="chart-container">
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <script>
+        let currentData = ` + string(jsonData) + `;
+        let pathHistory = [];
+        let chart;
+
+        // Funkce pro generování barev pro adresáře s dětmi
+        function generateColor(index, total) {
+            const colors = [
+                '#4CAF50', // zelená
+                '#2196F3', // modrá
+                '#9C27B0', // fialová
+                '#FF9800', // oranžová
+                '#E91E63', // růžová
+                '#009688', // tyrkysová
+                '#673AB7', // tmavě fialová
+                '#3F51B5', // indigo
+                '#00BCD4', // světle modrá
+                '#8BC34A'  // světle zelená
+            ];
+            return colors[index % colors.length];
+        }
+
+        // Funkce pro generování odstínů šedé
+        function generateGrayShade(index, total) {
+            // Generujeme odstíny od světle šedé (80%) do středně šedé (60%)
+            const brightness = Math.floor(80 - (index % 5) * 4);
+            return 'hsl(0, 0%, ' + brightness + '%)';
+        }
+
+        function goUp() {
+            if (pathHistory.length > 0) {
+                currentData = pathHistory.pop();
+                updateDisplay();
+            }
+        }
+
+        function formatSize(bytes) {
+            const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+            let size = bytes;
+            let unitIndex = 0;
+            while (size >= 1024 && unitIndex < units.length - 1) {
+                size /= 1024;
+                unitIndex++;
+            }
+            return size.toFixed(1) + ' ' + units[unitIndex];
+        }
+
+        function updateChart(data) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            if (chart) {
+                chart.destroy();
+            }
+
+            document.getElementById('upButton').disabled = pathHistory.length === 0;
+
+            const labels = data.children.map(item => item.path.split('/').pop());
+            const sizes = data.children.map(item => item.size);
+            const hasChildren = data.children.map(item => item.children && item.children.length > 0);
+
+            const backgroundColors = data.children.map((item, index) => 
+                item.children && item.children.length > 0 
+                    ? generateColor(index, data.children.length) 
+                    : generateGrayShade(index, data.children.length)
+            );
+            const hoverColors = data.children.map((item, index) => 
+                item.children && item.children.length > 0 
+                    ? generateColor(index, data.children.length) 
+                    : generateGrayShade(index + 1, data.children.length)
+            );
+
+            chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: sizes,
+                        backgroundColor: backgroundColors,
+                        hoverBackgroundColor: hoverColors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    const size = formatSize(context.raw);
+                                    if (hasChildren[index]) {
+                                        return context.label + ': ' + size;
+                                    }
+                                    return size;
+                                }
+                            }
+                        }
+                    },
+                    onClick: function(evt, elements) {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            if (data.children[index].children && data.children[index].children.length > 0) {
+                                pathHistory.push(currentData);
+                                currentData = data.children[index];
+                                updateDisplay();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentPath').textContent = currentData.path;
+            document.getElementById('currentSize').textContent = formatSize(currentData.size);
+            updateChart(currentData);
+        }
+
+        function copyPath() {
+            navigator.clipboard.writeText(currentData.path);
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>`
+	return html
 }

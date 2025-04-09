@@ -66,6 +66,7 @@ func main() {
 	flag.IntVar(&config.RecursiveDepth, "d", 0, "Number of directories for recursive analysis")
 	flag.BoolVar(&config.Verbose, "v", false, "Shows currently processed directory")
 	flag.StringVar(&config.JSONOutput, "j", "", "Export results to JSON file")
+	flag.StringVar(&config.HTMLOutput, "html", "", "Export results to HTML file with pie chart visualization")
 	flag.BoolVar(&showHelp, "help", false, "Shows this help message")
 	flag.Parse()
 
@@ -81,6 +82,7 @@ func main() {
 		fmt.Println("  -d count\tFor 'count' largest directories at each level performs recursive analysis")
 		fmt.Println("  -v\t\tShows currently processed directory")
 		fmt.Println("  -j file.json\tExport results to JSON file")
+		fmt.Println("  -html file.html\tExport results to HTML file with pie chart visualization")
 		fmt.Println("  -help\t\tShows this help message")
 		fmt.Println("\nExamples:")
 		fmt.Println("  ndu -h -n 3 /")
@@ -118,6 +120,15 @@ func main() {
 
 		if err := os.WriteFile(config.JSONOutput, jsonData, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	// If HTML output is requested, save the results
+	if config.HTMLOutput != "" {
+		htmlData := ndu.ExportToHTML(jsonResult)
+		if err := os.WriteFile(config.HTMLOutput, []byte(htmlData), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing HTML file: %v\n", err)
 			os.Exit(1)
 		}
 	}
