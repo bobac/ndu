@@ -1,0 +1,21 @@
+# Binární soubory
+/bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE a editor soubory
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Go specifické
+*.test
+*.out
+*.prof
+
+# OS specifické
+.DS_Store
+Thumbs.db 
