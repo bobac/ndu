@@ -38,4 +38,7 @@ Thumbs.db
 
 # Data directory and JSON files
 data/
-*.json 
+*.json
+
+# HTML files
+*.html 
