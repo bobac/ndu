@@ -398,10 +398,32 @@ func ExportToHTML(jsonDir JSONDir) string {
                     onClick: function(evt, elements) {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            if (data.children[index].children && data.children[index].children.length > 0) {
+                            const clickedItem = data.children[index];
+                            if (clickedItem.children && clickedItem.children.length > 0) {
                                 pathHistory.push(currentData);
-                                currentData = data.children[index];
+                                currentData = clickedItem;
                                 updateDisplay();
+                            } else {
+                                // Pro neaktivní položky zkopírujeme cestu do schránky
+                                navigator.clipboard.writeText(clickedItem.path);
+                                // Přidáme vizuální feedback
+                                const tooltip = document.createElement('div');
+                                tooltip.textContent = 'Cesta zkopírována!';
+                                tooltip.style.position = 'fixed';
+                                tooltip.style.left = (evt.clientX + 10) + 'px';
+                                tooltip.style.top = (evt.clientY - 10) + 'px';
+                                tooltip.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                                tooltip.style.color = 'white';
+                                tooltip.style.padding = '5px 10px';
+                                tooltip.style.borderRadius = '4px';
+                                tooltip.style.fontSize = '14px';
+                                tooltip.style.zIndex = '1000';
+                                document.body.appendChild(tooltip);
+                                setTimeout(() => {
+                                    tooltip.style.opacity = '0';
+                                    tooltip.style.transition = 'opacity 0.5s';
+                                    setTimeout(() => document.body.removeChild(tooltip), 500);
+                                }, 1000);
                             }
                         }
                     }
