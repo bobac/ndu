@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/bobac/ndu/pkg/ndu"
 )
@@ -68,7 +70,18 @@ func main() {
 	flag.StringVar(&config.JSONOutput, "j", "", "Export results to JSON file")
 	flag.StringVar(&config.HTMLOutput, "html", "", "Export results to HTML file with pie chart visualization")
 	flag.BoolVar(&showHelp, "help", false, "Shows this help message")
+	autoMode := flag.Bool("auto", false, "Auto mode with reasonable defaults and opens HTML in default browser")
 	flag.Parse()
+
+	if *autoMode {
+		// Nastavíme výchozí parametry pro auto mód
+		config.HumanReadable = true
+		config.MaxDirs = 10
+		config.Recursive = 4
+		config.RecursiveDepth = 5
+		config.Verbose = true
+		config.HTMLOutput = "auto.html"
+	}
 
 	if showHelp {
 		fmt.Println("NDU - Command line utility for disk usage analysis")
@@ -84,6 +97,7 @@ func main() {
 		fmt.Println("  -j file.json\tExport results to JSON file")
 		fmt.Println("  -html file.html\tExport results to HTML file with pie chart visualization")
 		fmt.Println("  -help\t\tShows this help message")
+		fmt.Println("  -auto\t\tAuto mode with reasonable defaults and opens HTML in default browser")
 		fmt.Println("\nExamples:")
 		fmt.Println("  ndu -h -n 3 /")
 		fmt.Println("  ndu -h -n 3 -r 2 -d 1 /")
@@ -130,6 +144,22 @@ func main() {
 		if err := os.WriteFile(config.HTMLOutput, []byte(htmlData), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing HTML file: %v\n", err)
 			os.Exit(1)
+		}
+
+		// Pokud jsme v auto módu, otevřeme HTML v prohlížeči
+		if *autoMode {
+			var cmd *exec.Cmd
+			switch runtime.GOOS {
+			case "windows":
+				cmd = exec.Command("cmd", "/c", "start", config.HTMLOutput)
+			case "darwin":
+				cmd = exec.Command("open", config.HTMLOutput)
+			default: // linux a ostatní
+				cmd = exec.Command("xdg-open", config.HTMLOutput)
+			}
+			if err := cmd.Start(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error opening browser: %v\n", err)
+			}
 		}
 	}
 
