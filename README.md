@@ -6,6 +6,7 @@ A utility for analyzing directory sizes on disk, similar to the Unix `du` comman
 - Displays directory sizes in human-readable format (e.g. 1.2 GB)
 - Shows only the largest directories
 - Recursive analysis with configurable depth
+- JSON export of directory structure and sizes
 - Cross-platform support (Windows, Linux, macOS)
 
 ## Usage
@@ -17,6 +18,7 @@ ndu [switches] [directory]
 - `-r depth` - Performs recursive analysis of directories up to "depth" level
 - `-d count` - Limits the number of directories for recursive analysis to "count" largest ones
 - `-v` - Shows currently processed directory
+- `-j file.json` - Exports results to JSON file (sizes in bytes)
 - `-help` - Shows help message
 
 ## Examples
@@ -29,6 +31,28 @@ ndu -h -n 3 -r 2 /
 
 # Recursive analysis up to depth 2, showing top 3 directories but only analyzing the largest one
 ndu -h -n 3 -r 2 -d 1 /
+
+# Export directory analysis to JSON file
+ndu -j results.json /
+
+# Combine JSON export with other options
+ndu -h -n 3 -r 2 -j results.json /
+```
+
+## JSON Output Format
+The JSON output contains a hierarchical structure of directories with their sizes in bytes:
+```json
+{
+  "path": "/path/to/directory",
+  "size": 1234567890,
+  "children": [
+    {
+      "path": "/path/to/directory/subdir1",
+      "size": 123456789,
+      "children": []
+    }
+  ]
+}
 ```
 
 ## Installation

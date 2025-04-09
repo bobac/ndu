@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -9,10 +10,10 @@ import (
 	"github.com/bobac/ndu/pkg/ndu"
 )
 
-func analyzeRecursive(path string, config ndu.Config, currentDepth int) error {
+func analyzeRecursive(path string, config ndu.Config, currentDepth int) (ndu.JSONDir, error) {
 	dirs, err := ndu.AnalyzeDir(path, config)
 	if err != nil {
-		return err
+		return ndu.JSONDir{}, err
 	}
 
 	// Pokud je zapnutý verbose mód, vyčistíme poslední řádek
@@ -23,9 +24,15 @@ func analyzeRecursive(path string, config ndu.Config, currentDepth int) error {
 	// Vypíšeme všechny nalezené adresáře (omezené MaxDirs)
 	ndu.PrintResults(dirs, config, path)
 
+	// Vytvoříme JSON strukturu pro aktuální úroveň
+	jsonDir, err := ndu.ExportToJSON(dirs, config, path)
+	if err != nil {
+		return ndu.JSONDir{}, err
+	}
+
 	// Pokud jsme dosáhli maximální hloubky rekurze, končíme
 	if currentDepth >= config.Recursive {
-		return nil
+		return jsonDir, nil
 	}
 
 	// Omezíme počet adresářů pro rekurzivní průchod
@@ -35,15 +42,17 @@ func analyzeRecursive(path string, config ndu.Config, currentDepth int) error {
 	}
 
 	// Rekurzivně projdeme omezený počet adresářů
-	for _, dir := range recursiveDirs {
+	for i, dir := range recursiveDirs {
 		fmt.Printf("\n=> %s\n", dir.Path)
-		if err := analyzeRecursive(dir.Path, config, currentDepth+1); err != nil {
+		childJSON, err := analyzeRecursive(dir.Path, config, currentDepth+1)
+		if err != nil {
 			fmt.Fprintf(os.Stderr, "Chyba při analýze adresáře %s: %v\n", dir.Path, err)
 			continue
 		}
+		jsonDir.Children[i].Children = childJSON.Children
 	}
 
-	return nil
+	return jsonDir, nil
 }
 
 func main() {
@@ -56,6 +65,7 @@ func main() {
 	flag.IntVar(&config.Recursive, "r", 0, "Recursive analysis depth")
 	flag.IntVar(&config.RecursiveDepth, "d", 0, "Number of directories for recursive analysis")
 	flag.BoolVar(&config.Verbose, "v", false, "Shows currently processed directory")
+	flag.StringVar(&config.JSONOutput, "j", "", "Export results to JSON file")
 	flag.BoolVar(&showHelp, "help", false, "Shows this help message")
 	flag.Parse()
 
@@ -70,10 +80,12 @@ func main() {
 		fmt.Println("  -r depth\tPerforms recursive analysis of directories up to 'depth' level")
 		fmt.Println("  -d count\tFor 'count' largest directories at each level performs recursive analysis")
 		fmt.Println("  -v\t\tShows currently processed directory")
+		fmt.Println("  -j file.json\tExport results to JSON file")
 		fmt.Println("  -help\t\tShows this help message")
 		fmt.Println("\nExamples:")
 		fmt.Println("  ndu -h -n 3 /")
 		fmt.Println("  ndu -h -n 3 -r 2 -d 1 /")
+		fmt.Println("  ndu -j results.json /")
 		os.Exit(0)
 	}
 
@@ -90,9 +102,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := analyzeRecursive(absPath, config, 0); err != nil {
+	jsonResult, err := analyzeRecursive(absPath, config, 0)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error analyzing directory: %v\n", err)
 		os.Exit(1)
+	}
+
+	// If JSON output is requested, save the results
+	if config.JSONOutput != "" {
+		jsonData, err := json.MarshalIndent(jsonResult, "", "  ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
+			os.Exit(1)
+		}
+
+		if err := os.WriteFile(config.JSONOutput, jsonData, 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "Error writing JSON file: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// If verbose mode is enabled, add a newline at the end

@@ -34,4 +34,8 @@ go.work
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# Data directory and JSON files
+data/
+*.json 

@@ -23,6 +23,13 @@ type Config struct {
 	Recursive      int
 	RecursiveDepth int
 	Verbose        bool
+	JSONOutput     string
+}
+
+type JSONDir struct {
+	Path     string    `json:"path"`
+	Size     int64     `json:"size"`
+	Children []JSONDir `json:"children,omitempty"`
 }
 
 func FormatSize(size int64, humanReadable bool) string {
@@ -174,4 +181,25 @@ func PrintResults(dirs []DirSize, config Config, prefix string) {
 			fmt.Printf("%s\t%d\n", relPath, dir.Size)
 		}
 	}
+}
+
+func ExportToJSON(dirs []DirSize, config Config, prefix string) (JSONDir, error) {
+	root := JSONDir{
+		Path: prefix,
+		Size: 0,
+	}
+
+	for _, dir := range dirs {
+		relPath := strings.TrimPrefix(dir.Path, prefix)
+		if relPath == "" {
+			relPath = "."
+		}
+		root.Size += dir.Size
+		root.Children = append(root.Children, JSONDir{
+			Path: dir.Path,
+			Size: dir.Size,
+		})
+	}
+
+	return root, nil
 }
