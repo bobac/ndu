@@ -234,6 +234,16 @@ func ExportToHTML(jsonDir JSONDir) string {
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .subtitle {
+            display: none;
+        }
         .up-btn {
             padding: 8px 15px;
             background-color: #2196F3;
@@ -289,6 +299,7 @@ func ExportToHTML(jsonDir JSONDir) string {
     </style>
 </head>
 <body>
+    <div class="title">NDU - Nice Disk Usage (c) 2025 Robert Houser</div>
     <div class="header">
         <button class="up-btn" onclick="goUp()" id="upButton">↑</button>
         <div class="path" id="currentPath"></div>
