@@ -1,21 +1,37 @@
-# Binární soubory
-/bin/
+# Binary files
+bin/
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
 
-# IDE a editor soubory
-.idea/
-.vscode/
-*.swp
-*.swo
+# Test binary, built with `go test -c`
+*.test
 
-# Go specifické
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 *.test
 *.out
-*.prof
 
-# OS specifické
+# OS specific
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db 

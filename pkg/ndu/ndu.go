@@ -43,10 +43,10 @@ func FormatSize(size int64, humanReadable bool) string {
 }
 
 func getTerminalWidth() int {
-	// Výchozí šířka terminálu
+	// Default terminal width
 	width := 80
 
-	// Zkusíme získat šířku terminálu
+	// Try to get terminal width
 	if width, _, err := term.GetSize(int(os.Stdout.Fd())); err == nil {
 		return width
 	}
@@ -56,14 +56,14 @@ func getTerminalWidth() int {
 
 func shortenPath(path string) string {
 	width := getTerminalWidth()
-	// Necháme místo pro "Zpracovávám: " a nějaké rezervy
+	// Leave space for "Processing: " and some margin
 	maxLen := width - 20
 
 	if len(path) <= maxLen {
 		return path
 	}
 
-	// Zkrátíme cestu uprostřed
+	// Shorten path in the middle
 	half := maxLen / 2
 	return path[:half-3] + "..." + path[len(path)-(half-3):]
 }
@@ -83,7 +83,7 @@ func GetDirSize(path string, config Config) (int64, error) {
 			if config.Verbose {
 				currentDir := filepath.Dir(filePath)
 				if currentDir != lastDir || len(currentFile) < len(lastProgress) {
-					progress := fmt.Sprintf("\r\033[KZpracovávám: %s", shortenPath(currentFile))
+					progress := fmt.Sprintf("\r\033[KProcessing: %s", shortenPath(currentFile))
 					fmt.Print(progress)
 					lastProgress = progress
 					lastDir = currentDir
@@ -111,7 +111,7 @@ func AnalyzeDir(path string, config Config) ([]DirSize, error) {
 		if entry.IsDir() {
 			dirPath := filepath.Join(path, entry.Name())
 			if config.Verbose {
-				fmt.Printf("\r\033[KZpracovávám adresář: %s", shortenPath(dirPath))
+				fmt.Printf("\r\033[KProcessing directory: %s", shortenPath(dirPath))
 			}
 			size, err := GetDirSize(dirPath, config)
 			if err != nil {
@@ -138,7 +138,7 @@ func PrintResults(dirs []DirSize, config Config, prefix string) {
 	}
 
 	if config.HumanReadable {
-		// Najdeme maximální délku cesty a velikosti
+		// Find maximum path and size lengths
 		maxPathLen := 0
 		maxSizeLen := 0
 		for _, dir := range dirs {
@@ -155,7 +155,7 @@ func PrintResults(dirs []DirSize, config Config, prefix string) {
 			}
 		}
 
-		// Vypíšeme výsledky s zarovnáním
+		// Print results with alignment
 		for _, dir := range dirs {
 			relPath := strings.TrimPrefix(dir.Path, prefix)
 			if relPath == "" {
@@ -165,7 +165,7 @@ func PrintResults(dirs []DirSize, config Config, prefix string) {
 			fmt.Printf("%-*s  %*s\n", maxPathLen, relPath, maxSizeLen, sizeStr)
 		}
 	} else {
-		// Vypíšeme výsledky bez zarovnání
+		// Print results without alignment
 		for _, dir := range dirs {
 			relPath := strings.TrimPrefix(dir.Path, prefix)
 			if relPath == "" {

@@ -51,27 +51,27 @@ func main() {
 	var path string
 	var showHelp bool
 
-	flag.BoolVar(&config.HumanReadable, "h", false, "Vypisuje velikosti v lidsky čitelné formě")
-	flag.IntVar(&config.MaxDirs, "n", 0, "Počet největších adresářů k zobrazení")
-	flag.IntVar(&config.Recursive, "r", 0, "Hloubka rekurzivního průchodu")
-	flag.IntVar(&config.RecursiveDepth, "d", 0, "Počet adresářů pro rekurzivní průchod")
-	flag.BoolVar(&config.Verbose, "v", false, "Zobrazuje aktuálně zpracovávaný adresář")
-	flag.BoolVar(&showHelp, "help", false, "Zobrazí nápovědu")
+	flag.BoolVar(&config.HumanReadable, "h", false, "Displays sizes in human readable format")
+	flag.IntVar(&config.MaxDirs, "n", 0, "Number of largest directories to display")
+	flag.IntVar(&config.Recursive, "r", 0, "Recursive analysis depth")
+	flag.IntVar(&config.RecursiveDepth, "d", 0, "Number of directories for recursive analysis")
+	flag.BoolVar(&config.Verbose, "v", false, "Shows currently processed directory")
+	flag.BoolVar(&showHelp, "help", false, "Shows this help message")
 	flag.Parse()
 
 	if showHelp {
-		fmt.Println("NDU - Command line utilita pro zjištění obsazenosti disku")
+		fmt.Println("NDU - Command line utility for disk usage analysis")
 		fmt.Println("(c) 2025 Robert Houser")
-		fmt.Println("\nPoužití:")
-		fmt.Println("  ndu [přepínače] [adresář]")
-		fmt.Println("\nPřepínače:")
-		fmt.Println("  -h\t\tVypisuje velikosti v lidsky čitelné formě (např. 1.2 GB)")
-		fmt.Println("  -n počet\tVypíše jen 'počet' největších adresářů na každé úrovni")
-		fmt.Println("  -r hloubka\tProvede rekurzivní analýzu adresářů do úrovně 'hloubka'")
-		fmt.Println("  -d počet\tPro 'počet' největších adresářů v každé úrovni provede rekurzivní analýzu")
-		fmt.Println("  -v\t\tZobrazuje aktuálně zpracovávaný adresář")
-		fmt.Println("  -help\t\tZobrazí tuto nápovědu")
-		fmt.Println("\nPříklady:")
+		fmt.Println("\nUsage:")
+		fmt.Println("  ndu [switches] [directory]")
+		fmt.Println("\nSwitches:")
+		fmt.Println("  -h\t\tDisplays sizes in human readable format (e.g. 1.2 GB)")
+		fmt.Println("  -n count\tShows only 'count' largest directories at each level")
+		fmt.Println("  -r depth\tPerforms recursive analysis of directories up to 'depth' level")
+		fmt.Println("  -d count\tFor 'count' largest directories at each level performs recursive analysis")
+		fmt.Println("  -v\t\tShows currently processed directory")
+		fmt.Println("  -help\t\tShows this help message")
+		fmt.Println("\nExamples:")
 		fmt.Println("  ndu -h -n 3 /")
 		fmt.Println("  ndu -h -n 3 -r 2 -d 1 /")
 		os.Exit(0)
@@ -86,16 +86,16 @@ func main() {
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Chyba při získávání absolutní cesty: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error getting absolute path: %v\n", err)
 		os.Exit(1)
 	}
 
 	if err := analyzeRecursive(absPath, config, 0); err != nil {
-		fmt.Fprintf(os.Stderr, "Chyba při analýze adresáře: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error analyzing directory: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Pokud je zapnutý verbose mód, přidáme na konec nový řádek
+	// If verbose mode is enabled, add a newline at the end
 	if config.Verbose {
 		fmt.Println()
 	}

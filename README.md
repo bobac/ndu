@@ -1,56 +1,40 @@
-# NDU - Command line utilita pro zjištění obsazenosti disku
+# NDU - Command line utility for disk usage analysis
 
-Utilita pro analýzu velikosti adresářů na disku, podobná unixovému příkazu `du`.
+A utility for analyzing directory sizes on disk, similar to the Unix `du` command.
 
-## Instalace
+## Features
+- Displays directory sizes in human-readable format (e.g. 1.2 GB)
+- Shows only the largest directories
+- Recursive analysis with configurable depth
+- Cross-platform support (Windows, Linux, macOS)
 
+## Usage
+ndu [switches] [directory]
+
+### Switches
+- `-h` - Displays directory sizes in human-readable format (e.g. 24 KB, 2.2 GB)
+- `-n count` - Shows only "count" largest directories at each level
+- `-r depth` - Performs recursive analysis of directories up to "depth" level
+- `-d count` - Limits the number of directories for recursive analysis to "count" largest ones
+- `-v` - Shows currently processed directory
+- `-help` - Shows help message
+
+## Examples
+```bash
+# Show top 3 largest directories in human-readable format
+ndu -h -n 3 /
+
+# Recursive analysis up to depth 2, showing top 3 directories at each level
+ndu -h -n 3 -r 2 /
+
+# Recursive analysis up to depth 2, showing top 3 directories but only analyzing the largest one
+ndu -h -n 3 -r 2 -d 1 /
+```
+
+## Installation
 ```bash
 go install github.com/bobac/ndu/cmd/ndu@latest
 ```
 
-## Použití
-
-```bash
-ndu [switche] [adresář]
-```
-
-### Switche
-- `-h` - Vypisuje velikosti adresářů v lidsky čitelné formě (např. 24 KB, 2.2 GB)
-- `-n počet` - Vypíše jen "počet" největších adresářů na každé úrovni
-- `-r hloubka` - Provede rekurzivní analýzu adresářů do úrovně "hloubka"
-- `-d počet` - Omezí počet adresářů rekurzivní analýzy nejvyšší počet "počet" největších
-
-### Příklady
-
-```bash
-# Zobrazení 10 největších adresářů v aktuálním adresáři
-ndu -h -n 10
-
-# Rekurzivní analýza kořenového adresáře
-ndu -h -n 3 -r -d 1 /
-```
-
-## Build
-
-Pro build na všech podporovaných platformách použijte:
-
-### Linux/MacOS
-```bash
-chmod +x build.sh
-./build.sh
-```
-
-### Windows
-```powershell
-.\build.ps1
-```
-
-Výsledné binární soubory budou umístěny v adresáři `bin/`.
-
-## Podporované platformy
-- Windows
-- Linux (x86_64, ARM64)
-- MacOS (Intel, Apple Silicon)
-
-## Licence
-MIT 
+## License
+MIT License - see [LICENSE](LICENSE) file for details 
